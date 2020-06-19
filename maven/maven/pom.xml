@@ -1,0 +1,214 @@
+﻿<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.ioteye.maven</groupId>
+	<artifactId>maven</artifactId>
+	<version>1.0.0</version>
+	<packaging>pom</packaging>
+
+	<name>maven</name>
+	<url>http://maven.apache.org</url>
+
+	<!-- 依赖的maven仓库 -->
+	<repositories>
+		<repository>
+			<id>ioteye-nexus</id>
+			<url>http://ioteye:8082/repository/maven-public</url>
+		</repository>
+	</repositories>
+
+	<distributionManagement>
+		<repository>
+			<id>nexus-releases</id>
+			<name>Local Nexus Repository</name>
+			<url>http://ioteye:8082/repository/maven-releases</url>
+		</repository>
+		<snapshotRepository>
+			<id>nexus-snapshots</id>
+			<name>Local Nexus Repository</name>
+			<url>http://ioteye:8082/repository/maven-snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+
+		<!-- spring -->
+		<spring.version>4.3.6.RELEASE</spring.version>
+	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-core</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-context</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-tx</artifactId>
+				<version>${spring.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>4.12</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-tx</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<profiles>
+		<profile>
+			<id>test</id>
+			<properties>
+				<env.name>test</env.name>
+				<env.version>snapshot</env.version>
+			</properties>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+		</profile>
+		<profile>
+			<id>prd</id>
+			<properties>
+				<env.name>prd</env.name>
+				<env.version>bin</env.version>
+			</properties>
+		</profile>
+	</profiles>
+
+	<build>
+		<finalName>${project.artifactId}-${project.version}</finalName>
+		<sourceDirectory>src/main/java</sourceDirectory>
+		<testSourceDirectory>src/test/java</testSourceDirectory>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<excludes>
+					<exclude>dev/*</exclude>
+					<exclude>prd/*</exclude>
+				</excludes>
+			</resource>
+			<resource>
+				<directory>${project.basedir}/src/main/resources/${env.name}</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+		<testResources>
+			<testResource>
+				<directory>src/test/resources</directory>
+				<excludes>
+					<exclude>dev/*</exclude>
+					<exclude>prd/*</exclude>
+				</excludes>
+			</testResource>
+			<testResource>
+				<directory>${project.basedir}/src/main/resources/${env.name}</directory>
+				<filtering>true</filtering>
+			</testResource>
+		</testResources>
+
+		<plugins>
+			<!-- 用于指定本项目生成的jar包中的MANIFEST.MF文件中的配置, 如Class-Path和Main-Class -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.5.5</version>
+				<executions>
+					<!-- 配置执行器 -->
+					<execution>
+						<id>package-assembly</id>
+						<!-- 绑定到package生命周期阶段上 -->
+						<phase>package</phase>
+						<goals>
+							<!-- 只运行一次 -->
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<!-- 打包文件名 -->
+							<finalName>${project.name}-${project.version}.${env.version}</finalName>
+							<!--配置描述文件路径 -->
+							<descriptor>conf/assembly.xml</descriptor>
+						</configuration>
+					</execution>
+				</executions>
+				<configuration>
+					<appendAssemblyId>false</appendAssemblyId>
+					<descriptors>
+						<descriptor>conf/assembly.xml</descriptor>
+					</descriptors>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.22.1</version>
+			</plugin>
+			<plugin>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.0.2</version>
+			</plugin>
+			<plugin>
+				<artifactId>maven-install-plugin</artifactId>
+				<version>2.5.2</version>
+			</plugin>
+			<plugin>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<version>2.8.2</version>
+			</plugin>
+			<plugin>
+				<artifactId>maven-site-plugin</artifactId>
+				<version>3.7.1</version>
+			</plugin>
+
+			<!-- 指定项目源码以及 编译jdk版本 -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.6.0</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+					<!-- 字符集编码 -->
+					<encoding>UTF-8</encoding>
+					<!-- 编译器使用的初始内存 -->
+					<meminitial>128m</meminitial>
+					<!-- 编译器使用的最大内存 -->
+					<maxmem>512m</maxmem>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
